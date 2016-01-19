@@ -14,6 +14,15 @@ class Monologue::Post < ActiveRecord::Base
   validates :url, uniqueness: true
   validate :url_do_not_start_with_slash
 
+  before_save :set_safe_content
+
+  def set_safe_content
+    self.safe_content = ActionView::Base.full_sanitizer.sanitize(self.content)
+
+    doc = Nokogiri::HTML(self.content)
+    self.first_image_path = doc.css('img').first['src']
+  end
+
   def tag_list= tags_attr
     self.tag!(tags_attr.split(","))
   end
